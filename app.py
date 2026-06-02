@@ -11,7 +11,8 @@ st.title("📈 Kosicodie Macro Dashboard")
 st.subheader("US Macro Economic Trends • Built by a 19yo Econ Freshman")
 
 # ←←← PUT YOUR FRED API KEY HERE ←←←
-API_KEY = "22ff88e163768c8805a0589a9c4bf692"
+# Replace with your actual FRED API key
+API_KEY = "YOUR_ACTUAL_FRED_API_KEY"
 
 fred = Fred(api_key=API_KEY)
 
