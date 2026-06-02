@@ -116,9 +116,5 @@ st.subheader("Forecast")
 window_size = 12
 forecast = df['GDP'].rolling(window=window_size).mean()
 st.plotly_chart(px.line(x=df.index, y=forecast), use_container_width=True)
-st.subheader("Summary Statistics")
-
-summary_stats = df.describe()
-st.dataframe(summary_stats, use_container_width=True)
 
 st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
