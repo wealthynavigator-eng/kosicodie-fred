@@ -21,7 +21,10 @@ def load_data():
         'Unemployment': 'UNRATE',
         'Inflation (CPI)': 'CPIAUCSL',
         'Fed Funds Rate': 'FEDFUNDS',
-        '10Y Treasury': 'DGS10'
+        '10Y Treasury': 'DGS10',
+        'Consumer Price Index': 'CPI',
+        'Personal Consumption Expenditures': 'PCE',
+        'GDP Growth Rate': 'GDPC1'
     }
     
     df_dict = {}
