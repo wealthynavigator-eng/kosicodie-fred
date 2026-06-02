@@ -58,6 +58,22 @@ with col3:
         st.metric("Inflation Rate (YoY)", "N/A")
 
 st.subheader("Economic Trends Over Time")
+st.subheader("Time Series Plots")
+
+for column in df.columns:
+    if column != "Yield Spread":
+        fig = px.line(
+            df,
+            x=df.index,
+            y=column,
+            title=column,
+            template="plotly_dark"
+        )
+        fig.update_layout(
+            template="plotly_dark",
+            hovermode="x unified"
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 # Yield spread calculation
 df["Yield Spread"] = df["10Y Treasury"] - df["Fed Funds Rate"]
@@ -85,6 +101,24 @@ else:
     st.success(f"✅ Yield Curve Normal ({latest_spread:.2f}%)")
 
 st.subheader("Recent Data")
-st.dataframe(df.tail(10), use_container_width=True)
+# This is not the correct location for this change, the previous change already replaced this line
+# st.dataframe(df.tail(10), use_container_width=True)
+st.subheader("Summary Statistics")
+
+summary_stats = df.describe()
+st.dataframe(summary_stats, use_container_width=True)
+st.subheader("Correlation Matrix")
+
+corr_matrix = df.corr()
+st.dataframe(corr_matrix, use_container_width=True)
+st.subheader("Forecast")
+
+window_size = 12
+forecast = df['GDP'].rolling(window=window_size).mean()
+st.plotly_chart(px.line(x=df.index, y=forecast), use_container_width=True)
+st.subheader("Summary Statistics")
+
+summary_stats = df.describe()
+st.dataframe(summary_stats, use_container_width=True)
 
 st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
