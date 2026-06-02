@@ -2,6 +2,8 @@ import streamlit as st
 from fredapi import Fred
 import pandas as pd
 import plotly.express as px
+import numpy as np
+from statsmodels.tsa.arima.model import ARIMA
 
 # ================== CONFIG ==================
 st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide")
@@ -102,6 +104,22 @@ if latest_spread < 0:
     st.error(f"⚠️ Yield Curve Inverted ({latest_spread:.2f}%)")
 else:
     st.success(f"✅ Yield Curve Normal ({latest_spread:.2f}%)")
+
+def calculate_recession_probability(yield_spread):
+    probability = 1 / (1 + np.exp(-yield_spread))
+    return probability
+
+recession_probability = calculate_recession_probability(latest_spread)
+st.metric("Recession Probability", f"{recession_probability:.2%}")
+
+def forecast_gdp(df):
+    model = ARIMA(df['GDP'], order=(1,1,1))
+    model_fit = model.fit()
+    forecast = model_fit.forecast(steps=12)
+    return forecast
+
+forecast = forecast_gdp(df)
+st.plotly_chart(px.line(x=df.index, y=forecast), use_container_width=True)
 
 st.subheader("Recent Data")
 # This is not the correct location for this change, the previous change already replaced this line
