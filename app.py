@@ -112,25 +112,7 @@ def calculate_recession_probability(yield_spread):
 recession_probability = calculate_recession_probability(latest_spread)
 st.metric("Recession Probability", f"{recession_probability:.2%}")
 
-def forecast_gdp(df):
-    # Try different orders for the ARIMA model
-    model = ARIMA(df['GDP'], order=(1,1,1))
-    model_fit = model.fit()
-    forecast = model_fit.forecast(steps=12)
-    return forecast
-
-def forecast_gdp_prophet(df):
-    from prophet import Prophet
-    model = Prophet()
-    model.fit(df[['GDP']].rename(columns={'GDP': 'y'}))
-    future = model.make_future_dataframe(periods=12)
-    forecast = model.predict(future)
-    return forecast
-
-forecast_arima = forecast_gdp(df)
-forecast_prophet = forecast_gdp_prophet(df)
-st.plotly_chart(px.line(x=df.index, y=forecast_arima), use_container_width=True)
-st.plotly_chart(px.line(x=forecast_prophet.index, y=forecast_prophet['yhat']), use_container_width=True)
+# Removed forecast functions and plots
 
 st.subheader("Recent Data")
 # This is not the correct location for this change, the previous change already replaced this line
