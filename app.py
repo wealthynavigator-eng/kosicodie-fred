@@ -29,7 +29,7 @@ def load_data():
         'Fed Funds Rate': 'FEDFUNDS',
         '10Y Treasury': 'DGS10',
         'Personal Consumption Expenditures': 'PCE',
-        'GDP Growth Rate': 'GDPC1'
+        'Real GDP': 'GDPC1'
     }
     
     df_dict = {}
@@ -53,7 +53,7 @@ def load_data():
 df = load_data()
 
 # ================== SIDEBAR ==================
-available_indicators = [col for col in df.columns if col not in ["Yield Spread", "GDP Growth Rate"]] # Exclude derived/redundant indicators from main selection
+available_indicators = [col for col in df.columns if col not in ["Yield Spread", "Real GDP"]] # Exclude derived/redundant indicators from main selection
 selected_indicators = st.sidebar.multiselect(
     "Select Indicators",
     options=available_indicators,
