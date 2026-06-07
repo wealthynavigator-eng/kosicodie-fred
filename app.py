@@ -52,6 +52,14 @@ def load_data():
 
 df = load_data()
 
+# ================== SIDEBAR ==================
+available_indicators = [col for col in df.columns if col not in ["Yield Spread", "GDP Growth Rate"]] # Exclude derived/redundant indicators from main selection
+selected_indicators = st.sidebar.multiselect(
+    "Select Indicators",
+    options=available_indicators,
+    default=available_indicators
+)
+
 # ================== DASHBOARD ==================
 col1, col2, col3 = st.columns(3)
 
@@ -73,8 +81,8 @@ with col3:
 st.subheader("Economic Trends Over Time")
 st.subheader("Time Series Plots")
 
-for column in df.columns:
-    if column != "Yield Spread":
+for column in selected_indicators:
+    if column in df.columns: # Ensure the column exists in the DataFrame
         fig = px.line(
             x=df.index,
             y=df[column],
@@ -87,8 +95,13 @@ for column in df.columns:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-# Yield spread calculation
-df["Yield Spread"] = df["10Y Treasury"] - df["Fed Funds Rate"]
+# Yield spread calculation (always displayed, not part of multiselect)
+if "10Y Treasury" in df.columns and "Fed Funds Rate" in df.columns:
+    df["Yield Spread"] = df["10Y Treasury"] - df["Fed Funds Rate"]
+    
+    # Only display Yield Spread chart if the necessary columns were loaded
+    # and if it's not explicitly excluded from display logic.
+    # For now, it's always displayed as per original request to not change other functionality.
 
 fig = px.line(
     df,
