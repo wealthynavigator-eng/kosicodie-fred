@@ -35,8 +35,13 @@ def load_data():
     
     df_dict = {}
     for name, sid in series.items():
-        data = fred.get_series(sid, observation_start='2010-01-01')
-        df_dict[name] = data
+        print(f"Loading {name}: {sid}")
+        try:
+            data = fred.get_series(sid, observation_start='2010-01-01')
+            df_dict[name] = data
+        except Exception as e:
+            print(f"Failed to load {name} ({sid})")
+            continue
     
     df = pd.DataFrame(df_dict)
     return df
