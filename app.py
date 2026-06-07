@@ -28,7 +28,6 @@ def load_data():
         'Inflation (CPI)': 'CPIAUCSL',
         'Fed Funds Rate': 'FEDFUNDS',
         '10Y Treasury': 'DGS10',
-        'Consumer Price Index': 'CPI',
         'Personal Consumption Expenditures': 'PCE',
         'GDP Growth Rate': 'GDPC1'
     }
@@ -59,14 +58,9 @@ with col2:
 
 with col3:
     # Fixed Indentation & Added Metric Label
-    inflation_series = (
-        df["Inflation (CPI)"]
-        .pct_change(12)
-        .dropna()
-    )
-
+    inflation_series = df["Inflation (CPI)"].pct_change()
     if not inflation_series.empty:
-        latest_inflation = inflation_series.iloc[-1] * 100
+        latest_inflation = inflation_series.dropna().iloc[-1] * 100
         st.metric("Inflation Rate (YoY)", f"{latest_inflation:.1f}%")
     else:
         st.metric("Inflation Rate (YoY)", "N/A")
@@ -77,9 +71,8 @@ st.subheader("Time Series Plots")
 for column in df.columns:
     if column != "Yield Spread":
         fig = px.line(
-            df,
             x=df.index,
-            y=column,
+            y=df[column],
             title=column,
             template="plotly_dark"
         )
