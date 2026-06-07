@@ -83,9 +83,10 @@ st.subheader("Time Series Plots")
 
 for column in selected_indicators:
     if column in df.columns: # Ensure the column exists in the DataFrame
+        series_data = df[column].dropna() # Use only non-null observations for the specific series
         fig = px.line(
-            x=df.index,
-            y=df[column],
+            x=series_data.index,
+            y=series_data.values,
             title=column,
             template="plotly_dark"
         )
