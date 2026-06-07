@@ -137,6 +137,68 @@ def calculate_recession_probability(yield_spread):
 recession_probability = calculate_recession_probability(latest_spread)
 st.metric("Recession Probability", f"{recession_probability:.2%}")
 
+st.subheader("Economic Health Score")
+
+# --- Get latest indicator values for score calculation ---
+# Ensure values are available before proceeding.
+unemployment_rate = df['Unemployment'].dropna().iloc[-1] if not df['Unemployment'].dropna().empty else np.nan
+
+cpi_data_for_inflation = df["Inflation (CPI)"].dropna()
+inflation_yoy_calc_series = cpi_data_for_inflation.pct_change(12)
+latest_inflation_rate = inflation_yoy_calc_series.dropna().iloc[-1] * 100 if not inflation_yoy_calc_series.dropna().empty else np.nan
+
+# latest_spread is already calculated and available from the Recession Risk Indicator section.
+
+# Check if any required value is NaN, if so, display a warning and skip score calculation
+if np.isnan(unemployment_rate) or np.isnan(latest_inflation_rate) or np.isnan(latest_spread):
+    st.warning("Could not calculate Economic Health Score due to missing data for key indicators (Unemployment, Inflation, Yield Spread).")
+else:
+    # ================== Score Calculation Methodology ==================
+    # Each component contributes to a total score out of 100.
+    # The calculations are transparent and aim to give a higher score for healthier economic conditions.
+
+    # 1. Unemployment Rate Component (Max 35 points)
+    # Target: 3.5% unemployment rate. Penalize for each % point above target.
+    # Formula: max(0, 35 - (actual_rate - 3.5) * 10)
+    # Example: 3.5% -> 35 pts, 4.5% -> 25 pts, 5.5% -> 15 pts, 6.5% -> 5 pts
+    unemployment_score = max(0, 35 - (unemployment_rate - 3.5) * 10)
+    st.markdown(f"**Unemployment Rate:** {unemployment_rate:.1f}% ({unemployment_score:.0f} points)")
+
+    # 2. Inflation Rate Component (Max 35 points)
+    # Target: 2.0% YoY inflation. Penalize for deviations from target.
+    # Formula: max(0, 35 - abs(actual_rate - 2.0) * 15)
+    # Example: 2.0% -> 35 pts, 3.0% (or 1.0%) -> 20 pts, 4.0% (or 0.0%) -> 5 pts
+    inflation_score = max(0, 35 - abs(latest_inflation_rate - 2.0) * 15)
+    st.markdown(f"**Inflation Rate (YoY):** {latest_inflation_rate:.1f}% ({inflation_score:.0f} points)")
+
+    # 3. Yield Spread Component (Max 30 points)
+    # Positive yield spread indicates healthier conditions. Inverted (negative) spread is worse.
+    # Formula: max(0, min(30, (actual_spread + 1.0) * 10))
+    # Example: -1.0% -> 0 pts, 0.0% -> 10 pts, 1.0% -> 20 pts, 2.0% -> 30 pts (score capped at 30)
+    yield_spread_score = max(0, min(30, (latest_spread + 1.0) * 10))
+    st.markdown(f"**Yield Spread:** {latest_spread:.2f}% ({yield_spread_score:.0f} points)")
+
+    # Total Economic Health Score
+    total_score = unemployment_score + inflation_score + yield_spread_score
+    st.markdown(f"---")
+    st.metric("Overall Economic Health Score", f"{total_score:.0f}/100")
+
+    # Determine status label based on total score
+    if total_score >= 80:
+        status_label = "Excellent"
+        st.success(f"Status: {status_label} 💪")
+    elif total_score >= 60:
+        status_label = "Good"
+        st.info(f"Status: {status_label} 👍")
+    elif total_score >= 40:
+        status_label = "Fair"
+        st.warning(f"Status: {status_label} ⚠️")
+    else:
+        status_label = "Weak"
+        st.error(f"Status: {status_label} 👎")
+
+st.markdown("---") # Add a separator after the section
+
 # Removed forecast functions and plots
 
 st.subheader("Recent Data")
