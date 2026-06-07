@@ -62,13 +62,13 @@ with col2:
     st.metric("Unemployment Rate", f"{df['Unemployment'].dropna().iloc[-1]:.1f}%")
 
 with col3:
-    # Fixed Indentation & Added Metric Label
-    inflation_series = df["Inflation (CPI)"].pct_change()
-    if not inflation_series.empty:
+    cpi = df["Inflation (CPI)"].dropna()
+    inflation_series = cpi.pct_change(12)
+    if inflation_series.empty or inflation_series.dropna().empty:
+        st.metric("Inflation Rate (YoY)", "N/A")
+    else:
         latest_inflation = inflation_series.dropna().iloc[-1] * 100
         st.metric("Inflation Rate (YoY)", f"{latest_inflation:.1f}%")
-    else:
-        st.metric("Inflation Rate (YoY)", "N/A")
 
 st.subheader("Economic Trends Over Time")
 st.subheader("Time Series Plots")
