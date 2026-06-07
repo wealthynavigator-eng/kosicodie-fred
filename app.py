@@ -205,6 +205,16 @@ st.markdown("---") # Add a separator after the section
 st.subheader("Recent Data")
 # This is not the correct location for this change, the previous change already replaced this line
 # st.dataframe(df.tail(10), use_container_width=True)
+
+st.subheader("Download Data")
+csv_data = df.to_csv(index=True).encode('utf-8')
+st.download_button(
+    label="Download data as CSV",
+    data=csv_data,
+    file_name='economic_indicators.csv',
+    mime='text/csv',
+)
+
 st.subheader("Summary Statistics")
 
 summary_stats = df.describe()
