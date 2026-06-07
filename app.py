@@ -39,10 +39,15 @@ def load_data():
             data = fred.get_series(sid, observation_start='2010-01-01')
             df_dict[name] = data
         except Exception as e:
-            print(f"Failed to load {name} ({sid})")
+            print(f"Failed to load {name} ({sid}): {e}")
             continue
     
     df = pd.DataFrame(df_dict)
+    print(f"Dataframe shape: {df.shape}")
+    print(f"Dataframe index type: {type(df.index)}")
+    print("Non-null counts by column:")
+    print(df.count())
+    
     return df
 
 df = load_data()
