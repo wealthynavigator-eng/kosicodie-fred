@@ -12,10 +12,11 @@ st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide")
 st.title("📈 Kosicodie Macro Dashboard")
 st.subheader("US Macro Economic Trends • Built by a 19yo Econ Freshman")
 
-# ←←← PUT YOUR FRED API KEY HERE ←←←
-# Replace with your actual FRED API key
-API_KEY = "abc123"  # replace with your actual FRED API key
-
+import os
+API_KEY = os.getenv("FRED_API_KEY")
+if not API_KEY:
+    st.error("FRED_API_KEY not found in .env file")
+    st.stop()
 fred = Fred(api_key=API_KEY)
 
 # ================== DATA PULL ==================
