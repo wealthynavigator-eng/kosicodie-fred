@@ -200,6 +200,81 @@ else:
 
 st.markdown("---") # Add a separator after the section
 
+st.subheader("Economic Regime")
+
+# --- Economic Regime Classification Methodology ---
+# This classification is based on general macroeconomic characteristics.
+# The thresholds are simplified for illustrative purposes and can be fine-tuned.
+#
+# Indicators used:
+# - Unemployment Rate: Low (<4.5%), Moderate (4.5-6%), High (>6%)
+# - Inflation Rate (YoY): Low (<2%), Moderate (2-4%), High (>4%)
+# - Yield Spread: Inverted (<0%), Narrow (0-0.5%), Normal (>0.5%)
+
+# Ensure values are available before proceeding.
+# unemployment_rate, latest_inflation_rate, and latest_spread are already calculated above.
+if np.isnan(unemployment_rate) or np.isnan(latest_inflation_rate) or np.isnan(latest_spread):
+    st.warning("Could not determine Economic Regime due to missing data for key indicators.")
+else:
+    regime = "Unknown"
+    status_emoji = "❓"
+    status_func = st.info # Default to info
+
+    # Define thresholds
+    unemployment_low = 4.5
+    unemployment_high = 6.0
+    inflation_low = 2.0
+    inflation_moderate_high = 4.0
+    yield_spread_inverted = 0.0
+    yield_spread_narrow = 0.5
+
+    # Determine conditions
+    is_unemployment_low = unemployment_rate < unemployment_low
+    is_unemployment_moderate = unemployment_rate >= unemployment_low and unemployment_rate < unemployment_high
+    is_unemployment_high = unemployment_rate >= unemployment_high
+
+    is_inflation_low = latest_inflation_rate < inflation_low
+    is_inflation_moderate = latest_inflation_rate >= inflation_low and latest_inflation_rate < inflation_moderate_high
+    is_inflation_high = latest_inflation_rate >= inflation_moderate_high
+
+    is_yield_spread_normal = latest_spread > yield_spread_narrow
+    is_yield_spread_narrow_positive = latest_spread >= yield_spread_inverted and latest_spread <= yield_spread_narrow
+    is_yield_spread_inverted = latest_spread < yield_spread_inverted
+
+    # Classification Logic
+    if is_unemployment_low and is_inflation_moderate and is_yield_spread_normal:
+        regime = "Expansion"
+        status_emoji = "🟢"
+        status_func = st.success
+    elif is_unemployment_low and is_inflation_high and is_yield_spread_normal: # Potentially overheating
+        regime = "Expansion (Overheating Risk)"
+        status_emoji = "🟡"
+        status_func = st.warning
+    elif is_unemployment_moderate and is_inflation_low and is_yield_spread_inverted:
+        regime = "Slowdown"
+        status_emoji = "🟠"
+        status_func = st.warning
+    elif is_unemployment_high and is_inflation_low: # Coming out of recession
+        regime = "Recovery"
+        status_emoji = "🔵"
+        status_func = st.info
+    elif is_unemployment_high and is_inflation_high:
+        regime = "Stagflation"
+        status_emoji = "🔴"
+        status_func = st.error
+    elif is_yield_spread_inverted: # Strong signal for upcoming slowdown/recession
+        regime = "Slowdown (Yield Curve Inverted)"
+        status_emoji = "⚠️"
+        status_func = st.error
+    else:
+        regime = "Neutral/Mixed Signals"
+        status_emoji = "⚪"
+        status_func = st.info
+
+    status_func(f"{status_emoji} Current Economic Regime: **{regime}**")
+
+st.markdown("---") # Add a separator after the section
+
 # Removed forecast functions and plots
 
 st.subheader("Recent Data")
