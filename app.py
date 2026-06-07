@@ -240,8 +240,61 @@ fig_corr.update_layout(
 st.plotly_chart(fig_corr, use_container_width=True)
 st.subheader("Forecast")
 
-window_size = 12
-forecast = df['GDP'].rolling(window=window_size).mean()
-st.plotly_chart(px.line(x=df.index, y=forecast), use_container_width=True)
+# --- ARIMA Forecast for Real GDP ---
+# Ensure Real GDP data is available and clean
+real_gdp_data = df['Real GDP'].dropna()
+
+if not real_gdp_data.empty:
+    # A simple ARIMA(1,1,1) model is chosen for demonstration.
+    # Model order (p,d,q) can be optimized for better performance.
+    try:
+        model = ARIMA(real_gdp_data, order=(1,1,1))
+        model_fit = model.fit()
+
+        # Forecast for the next 8 quarters (2 years)
+        # Note: ARIMA forecasts typically do not extend far into the future without increasing uncertainty.
+        forecast_steps = 8
+        forecast_result = model_fit.get_forecast(steps=forecast_steps)
+        forecast_values = forecast_result.predicted_mean
+        forecast_ci = forecast_result.conf_int()
+
+        # Create a date range for the forecast period
+        last_date = real_gdp_data.index[-1]
+        forecast_index = pd.date_range(start=last_date, periods=forecast_steps + 1, freq='QS-OCT')[1:] # Quarterly start in Oct (FRED's GDPC1)
+
+        # Combine historical and forecast data for plotting
+        plot_df = pd.DataFrame({
+            'Historical Real GDP': real_gdp_data,
+            'Forecasted Real GDP': pd.Series(forecast_values, index=forecast_index)
+        })
+
+        # Plotting with Plotly
+        fig_forecast = px.line(
+            plot_df,
+            title="Real GDP Historical and ARIMA Forecast (Next 8 Quarters)",
+            template="plotly_dark",
+            labels={'value': 'Real GDP (Billions of Chained 2017 Dollars)', 'index': 'Date'}
+        )
+        # Add confidence intervals
+        fig_forecast.add_traces([
+            px.line(x=forecast_index, y=forecast_ci.iloc[:, 0], line_color='rgba(0,0,0,0)', show_legend=False).data[0],
+            px.line(x=forecast_index, y=forecast_ci.iloc[:, 1], line_color='rgba(0,0,0,0)', fill='tonexty', fillcolor='rgba(0,100,80,0.2)', name='95% Confidence Interval').data[0]
+        ])
+        fig_forecast.update_layout(hovermode="x unified")
+        st.plotly_chart(fig_forecast, use_container_width=True)
+
+    except Exception as e:
+        st.warning(f"Could not generate ARIMA forecast for Real GDP: {e}")
+        st.write("Displaying simple historical Real GDP plot instead.")
+        fig = px.line(
+            x=real_gdp_data.index,
+            y=real_gdp_data.values,
+            title="Real GDP Historical Data",
+            template="plotly_dark"
+        )
+        fig.update_layout(template="plotly_dark", hovermode="x unified")
+        st.plotly_chart(fig, use_container_width=True)
+else:
+    st.warning("Real GDP data not available for forecasting.")
 
 st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
