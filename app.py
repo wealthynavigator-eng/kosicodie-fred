@@ -14,7 +14,7 @@ st.subheader("US Macro Economic Trends • Built by a 19yo Econ Freshman")
 
 # ←←← PUT YOUR FRED API KEY HERE ←←←
 # Replace with your actual FRED API key
-API_KEY = "YOUR_ACTUAL_FRED_API_KEY"
+API_KEY = "abc123"  # replace with your actual FRED API key
 
 fred = Fred(api_key=API_KEY)
 
