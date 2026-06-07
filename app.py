@@ -120,13 +120,18 @@ st.plotly_chart(fig, use_container_width=True)
 
 latest_spread = df["Yield Spread"].dropna().iloc[-1]
 
+st.subheader("Recession Risk Indicator")
 if latest_spread < 0:
-    st.error(f"⚠️ Yield Curve Inverted ({latest_spread:.2f}%)")
+    st.error(f"🔴 High Recession Risk: Yield Curve Inverted ({latest_spread:.2f}%)")
+elif 0 <= latest_spread < 0.5:
+    st.warning(f"🟠 Moderate Recession Risk: Narrow Yield Spread ({latest_spread:.2f}%)")
 else:
-    st.success(f"✅ Yield Curve Normal ({latest_spread:.2f}%)")
+    st.success(f"🟢 Low Recession Risk: Normal Yield Spread ({latest_spread:.2f}%)")
 
 def calculate_recession_probability(yield_spread):
-    probability = 1 / (1 + np.exp(-yield_spread))
+    # This is a placeholder model. A more robust model would be trained on historical data.
+    # For now, it provides a probability based on the given formula which correlates with inversion.
+    probability = 1 / (1 + np.exp(-1 * (yield_spread * 10 - 1))) # Adjusted for more intuitive output with typical spreads
     return probability
 
 recession_probability = calculate_recession_probability(latest_spread)
