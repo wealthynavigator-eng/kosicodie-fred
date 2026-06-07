@@ -149,7 +149,22 @@ st.dataframe(summary_stats, use_container_width=True)
 st.subheader("Correlation Matrix")
 
 corr_matrix = df.corr()
-st.dataframe(corr_matrix, use_container_width=True)
+fig_corr = px.imshow(
+    corr_matrix,
+    text_auto=True,
+    aspect="auto",
+    color_continuous_scale="RdBu_r", # Red-Blue diverging color scale
+    title="Indicator Correlation Heatmap"
+)
+fig_corr.update_layout(
+    xaxis_showgrid=False,
+    yaxis_showgrid=False,
+    xaxis_zeroline=False,
+    yaxis_zeroline=False,
+    template="plotly_dark",
+    height=600 # Adjust height for better visibility
+)
+st.plotly_chart(fig_corr, use_container_width=True)
 st.subheader("Forecast")
 
 window_size = 12
