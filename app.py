@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()          # Load variables from .env file
 import streamlit as st
 from fredapi import Fred
 import pandas as pd
