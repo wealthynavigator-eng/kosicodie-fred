@@ -350,10 +350,11 @@ if not real_gdp_data.empty:
             template="plotly_dark",
             labels={'value': 'Real GDP (Billions of Chained 2017 Dollars)', 'index': 'Date'}
         )
+        import plotly.graph_objects as go
         # Add confidence intervals
         fig_forecast.add_traces([
-            px.line(x=forecast_index, y=forecast_ci.iloc[:, 0], line_color='rgba(0,0,0,0)', show_legend=False).data[0],
-            px.line(x=forecast_index, y=forecast_ci.iloc[:, 1], line_color='rgba(0,0,0,0)', fill='tonexty', fillcolor='rgba(0,100,80,0.2)', name='95% Confidence Interval').data[0]
+            go.Scatter(x=forecast_index, y=forecast_ci.iloc[:, 0], line_color='rgba(0,0,0,0)', showlegend=False, mode='lines'),
+            go.Scatter(x=forecast_index, y=forecast_ci.iloc[:, 1], line_color='rgba(0,0,0,0)', fill='tonexty', fillcolor='rgba(0,100,80,0.2)', name='95% Confidence Interval', mode='lines')
         ])
         fig_forecast.update_layout(hovermode="x unified")
         st.plotly_chart(fig_forecast, use_container_width=True)
