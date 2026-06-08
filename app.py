@@ -287,10 +287,6 @@ st.markdown("---") # Add a separator after the section
 
 # Removed forecast functions and plots
 
-st.subheader("Recent Data")
-# This is not the correct location for this change, the previous change already replaced this line
-# st.dataframe(df.tail(10), use_container_width=True)
-
 st.subheader("Download Data")
 csv_data = df.to_csv(index=True).encode('utf-8')
 st.download_button(
