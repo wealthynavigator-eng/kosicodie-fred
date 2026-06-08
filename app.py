@@ -142,12 +142,13 @@ st.subheader("Economic Health Score")
 
 # Insert Recent Data table here
 st.subheader("Recent Data")
-recent_data = df.tail(10)
+selected_column = df.columns[0] if 'GDP' in df.columns else selected_indicators[0]
+recent_data = df[selected_column].dropna().tail(10)
+recent_data = recent_data.to_frame('Value')
 recent_data.reset_index(inplace=True)
 recent_data['index'] = recent_data['index'].dt.strftime('%Y-%m-%d')
 recent_data = recent_data.rename(columns={'index': 'Date'})
-recent_data = recent_data[['Date', df.columns[0]]]
-st.table(recent_data)
+st.table(recent_data[['Date', 'Value']])
 
 # --- Get latest indicator values for score calculation ---
 # Ensure values are available before proceeding.
