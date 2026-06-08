@@ -140,6 +140,15 @@ st.metric("Recession Probability", f"{recession_probability:.2%}")
 
 st.subheader("Economic Health Score")
 
+# Insert Recent Data table here
+st.subheader("Recent Data")
+recent_data = df.tail(10)
+recent_data.reset_index(inplace=True)
+recent_data['index'] = recent_data['index'].dt.strftime('%Y-%m-%d')
+recent_data = recent_data.rename(columns={'index': 'Date'})
+recent_data = recent_data[['Date', df.columns[0]]]
+st.table(recent_data)
+
 # --- Get latest indicator values for score calculation ---
 # Ensure values are available before proceeding.
 unemployment_rate = df['Unemployment'].dropna().iloc[-1] if not df['Unemployment'].dropna().empty else np.nan
