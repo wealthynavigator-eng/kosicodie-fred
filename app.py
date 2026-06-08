@@ -132,7 +132,7 @@ else:
 def calculate_recession_probability(yield_spread):
     # This is a placeholder model. A more robust model would be trained on historical data.
     # For now, it provides a probability based on the given formula which correlates with inversion.
-    probability = 1 / (1 + np.exp(-1 * (yield_spread * 10 - 1))) # Adjusted for more intuitive output with typical spreads
+    probability = 1 / (1 + np.exp(yield_spread * 5)) # Adjusted for more intuitive output with typical spreads
     return probability
 
 recession_probability = calculate_recession_probability(latest_spread)
