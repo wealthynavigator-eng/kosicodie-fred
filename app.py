@@ -128,8 +128,10 @@ for column in selected_indicators:
         st.plotly_chart(fig, use_container_width=True)
 
 # Yield spread calculation (always displayed, not part of multiselect)
+latest_spread = np.nan # Initialize latest_spread
 if "10Y Treasury" in df.columns and "Fed Funds Rate" in df.columns:
     df["Yield Spread"] = df["10Y Treasury"] - df["Fed Funds Rate"]
+    latest_spread = df['Yield Spread'].dropna().iloc[-1]
     
     # Only display Yield Spread chart if the necessary columns were loaded
     # and if it's not explicitly excluded from display logic.
@@ -138,17 +140,17 @@ if "10Y Treasury" in df.columns and "Fed Funds Rate" in df.columns:
     st.markdown(f"""
     <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
         <h2 style="color: #ffffff; font-size: 24px;">Yield Spread</h2>
-        <h1 style="color: #ffffff; font-size: 36px;">{df['Yield Spread'].dropna().iloc[-1]:.2f}%</h1>
+        <h1 style="color: #ffffff; font-size: 36px;">{latest_spread:.2f}%</h1>
         <p style="color: #666666; font-size: 14px;">Latest Spread</p>
     </div>
     """, unsafe_allow_html=True)
 
-    if df["Yield Spread"].dropna().iloc[-1] < 0:
-        st.error(f"🔴 High Recession Risk: Yield Curve Inverted ({df['Yield Spread'].dropna().iloc[-1]:.2f}%)")
-    elif 0 <= df["Yield Spread"].dropna().iloc[-1] < 0.5:
-        st.warning(f"🟠 Moderate Recession Risk: Narrow Yield Spread ({df['Yield Spread'].dropna().iloc[-1]:.2f}%)")
+    if latest_spread < 0:
+        st.error(f"🔴 High Recession Risk: Yield Curve Inverted ({latest_spread:.2f}%)")
+    elif 0 <= latest_spread < 0.5:
+        st.warning(f"🟠 Moderate Recession Risk: Narrow Yield Spread ({latest_spread:.2f}%)")
     else:
-        st.success(f"🟢 Low Recession Risk: Normal Yield Spread ({df['Yield Spread'].dropna().iloc[-1]:.2f}%)")
+        st.success(f"🟢 Low Recession Risk: Normal Yield Spread ({latest_spread:.2f}%)")
 
 def calculate_recession_probability(yield_spread):
     """
@@ -175,8 +177,12 @@ def calculate_recession_probability(yield_spread):
     
     return probability
 
-recession_probability = calculate_recession_probability(latest_spread)
-st.metric("Recession Probability", f"{recession_probability:.2%}")
+# Only calculate recession probability if latest_spread is not NaN
+if not np.isnan(latest_spread):
+    recession_probability = calculate_recession_probability(latest_spread)
+    st.metric("Recession Probability", f"{recession_probability:.2%}")
+else:
+    st.info("Recession Probability: N/A (Yield Spread data not available)")
 
 st.subheader("Economic Health Score", )
 
