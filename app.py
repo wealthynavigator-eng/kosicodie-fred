@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
+from scipy.stats import norm
 
 def get_color(regime):
     if regime == "Expansion":
@@ -65,9 +66,12 @@ def load_data():
         'Fed Funds Rate': 'FEDFUNDS',
         '10Y Treasury': 'DGS10',
         'Personal Consumption Expenditures': 'PCE',
-        'Real GDP': 'GDPC1'
+        'Real GDP': 'GDPC1',
+        # 10Y minus 3M Treasury spread — the NY Fed / Estrella-Mishkin standard
+        # recession predictor, pulled directly so it is computed consistently.
+        'Yield Spread': 'T10Y3M'
     }
-    
+
     df_dict = {}
     for name, sid in series.items():
         print(f"Loading {name}: {sid}")
@@ -77,16 +81,30 @@ def load_data():
         except Exception as e:
             print(f"Failed to load {name} ({sid}): {e}")
             continue
-    
-    df = pd.DataFrame(df_dict)
+
+    raw = pd.DataFrame(df_dict)
+    # Native monthly grid WITHOUT forward-fill: quarterly series keep NaN in their
+    # off-quarter months, so .describe()/.corr() see real observations rather than
+    # duplicated values. This is the ANALYSIS frame.
+    df_raw = raw.resample('MS').last()
+    # DISPLAY frame: forward-filled so cards, charts, score and regime always have a
+    # latest value on the common monthly grid (visual behaviour unchanged).
+    df = df_raw.ffill()
+
+    # Monthly-AVERAGE 10Y-3M spread for the recession probit. Estrella-Mishkin was
+    # estimated on monthly averages of the daily spread, not a single month-end print.
+    spread_monthly_avg = None
+    if 'Yield Spread' in df_dict:
+        spread_monthly_avg = df_dict['Yield Spread'].resample('MS').mean()
+
     print(f"Dataframe shape: {df.shape}")
     print(f"Dataframe index type: {type(df.index)}")
     print("Non-null counts by column:")
     print(df.count())
 
-    return df
+    return df, df_raw, spread_monthly_avg
 
-df = load_data()
+df, df_raw, spread_monthly_avg = load_data()
 
 # Update Last Updated placeholder after data load
 if not df.empty and not df.index.empty:
@@ -163,15 +181,10 @@ for column in selected_indicators:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-# Yield spread calculation (always displayed, not part of multiselect)
+# Yield spread (10Y-3M Treasury, FRED series T10Y3M) — always displayed, not part of multiselect
 latest_spread = np.nan # Initialize latest_spread
-if "10Y Treasury" in df.columns and "Fed Funds Rate" in df.columns:
-    df["Yield Spread"] = df["10Y Treasury"] - df["Fed Funds Rate"]
+if "Yield Spread" in df.columns and not df["Yield Spread"].dropna().empty:
     latest_spread = df['Yield Spread'].dropna().iloc[-1]
-    
-    # Only display Yield Spread chart if the necessary columns were loaded
-    # and if it's not explicitly excluded from display logic.
-    # For now, it's always displayed as per original request to not change other functionality.
 
     st.markdown(f"""
     <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
@@ -190,33 +203,42 @@ if "10Y Treasury" in df.columns and "Fed Funds Rate" in df.columns:
 
 def calculate_recession_probability(yield_spread):
     """
-    Calculate the probability of recession based on the yield spread.
-    
-    This model uses a logistic curve centered around a 0.0 yield spread.
-    The output is clamped between 1% and 99%.
-    
-    Parameters:
-    yield_spread (float): The difference between the 10-year treasury yield and the federal funds rate.
-    
-    Returns:
-    float: The probability of recession.
-    """
-    # Logistic curve parameters
-    midpoint = 0.0  # Center of the curve
-    steepness = 10.0  # Steepness of the curve
-    
-    # Calculate the logistic curve value
-    logistic_value = 1 / (1 + np.exp(-steepness * (yield_spread - midpoint)))
-    
-    # Clamp the output between 1% and 99%
-    probability = np.clip(logistic_value * 100, 1, 99) / 100
-    
-    return probability
+    Probability of a US recession within the NEXT 12 MONTHS.
 
-# Only calculate recession probability if latest_spread is not NaN
-if not np.isnan(latest_spread):
-    recession_probability = calculate_recession_probability(latest_spread)
-    st.metric("Recession Probability", f"{recession_probability:.2%}")
+    Methodology: the New York Fed (Estrella & Mishkin, 1996) probit model on the
+    10Y-3M Treasury spread:
+
+        P = Phi(alpha + beta * spread)
+
+    where Phi is the standard normal CDF, the spread is in percentage points, and
+    the published coefficients are alpha = -0.5333, beta = -0.6629. A positive
+    (steep) curve implies low probability; an inverted curve implies high probability.
+
+    Source: Estrella & Mishkin, "The Yield Curve as a Predictor of U.S. Recessions",
+    FRBNY Current Issues in Economics and Finance (1996); NY Fed yield-curve model.
+
+    Parameters:
+    yield_spread (float): 10-year minus 3-month Treasury yield, in percentage points.
+
+    Returns:
+    float: probability in [0, 1].
+    """
+    ALPHA = -0.5333
+    BETA = -0.6629
+    return float(norm.cdf(ALPHA + BETA * yield_spread))
+
+# Recession probability — Estrella-Mishkin probit, 12-month-ahead horizon. Use the
+# monthly-AVERAGE spread the model was estimated on, falling back to the latest
+# displayed spread if the average is unavailable.
+probit_spread = np.nan
+if spread_monthly_avg is not None and not spread_monthly_avg.dropna().empty:
+    probit_spread = spread_monthly_avg.dropna().iloc[-1]
+elif not np.isnan(latest_spread):
+    probit_spread = latest_spread
+
+if not np.isnan(probit_spread):
+    recession_probability = calculate_recession_probability(probit_spread)
+    st.metric("Recession Probability (next 12 months)", f"{recession_probability:.2%}")
 else:
     st.info("Recession Probability: N/A (Yield Spread data not available)")
 
@@ -389,11 +411,18 @@ st.download_button(
 
 st.subheader("Summary Statistics")
 
-summary_stats = df.describe()
+# Use the raw (non-forward-filled) monthly frame so counts and variance reflect real
+# observations, not duplicated quarterly values.
+summary_stats = df_raw.describe()
 st.dataframe(summary_stats, use_container_width=True)
 st.subheader("Correlation Matrix")
 
-corr_matrix = df.corr()
+# Correlate QUARTERLY GROWTH RATES (stationary) instead of forward-filled levels.
+# Forward-filled levels are serially correlated and produce statistically invalid
+# correlations; growth rates on the native quarterly grid avoid duplicated rows.
+analysis_cols = [c for c in df_raw.columns if c != "Yield Spread"]
+growth = df_raw[analysis_cols].resample('QS').last().pct_change()
+corr_matrix = growth.corr()
 fig_corr = px.imshow(
     corr_matrix,
     text_auto=True,
@@ -469,27 +498,5 @@ if not real_gdp_data.empty:
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.warning("Real GDP data not available for forecasting.")
-
-def get_color(regime):
-    if regime == "Expansion":
-        return "#00ff00"
-    elif regime == "Slowdown":
-        return "#ffff00"
-    elif regime == "Recovery":
-        return "#0000ff"
-    elif regime == "Stagflation":
-        return "#ff0000"
-    else:
-        return "#ffffff"
-
-def get_health_color(score):
-    if score >= 80:
-        return "#00ff00"
-    elif score >= 60:
-        return "#ffff00"
-    elif score >= 40:
-        return "#0000ff"
-    else:
-        return "#ff0000"
 
 st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
