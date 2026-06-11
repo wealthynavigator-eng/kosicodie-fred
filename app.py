@@ -11,13 +11,16 @@ from statsmodels.tsa.arima.model import ARIMA
 st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide", page_icon="📊")
 with st.container():
     st.markdown("<h1 style='text-align: center; color: #ffffff;'>Kosicodie Macro Dashboard</h1>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Economic Regime: <span style='color: #ff9900; padding: 5px; border-radius: 5px;'>Unknown</span></h3></div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Health Score: <span style='color: #00ff00; padding: 5px; border-radius: 5px;'>0</span></h3></div>", unsafe_allow_html=True)
-    with col3:
-        st.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Last Updated: <span style='color: #0000ff; padding: 5px; border-radius: 5px;'>Unknown</span></h3></div>", unsafe_allow_html=True)
+    status_col, score_col, updated_col = st.columns(3)
+    # Initialize placeholders for dynamic updates
+    economic_regime_placeholder = status_col.empty()
+    health_score_placeholder = score_col.empty()
+    last_updated_placeholder = updated_col.empty()
+
+    # Initial placeholder content
+    economic_regime_placeholder.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Economic Regime: <span style='color: #ff9900; padding: 5px; border-radius: 5px;'>...</span></h3></div>", unsafe_allow_html=True)
+    health_score_placeholder.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Health Score: <span style='color: #00ff00; padding: 5px; border-radius: 5px;'>...</span></h3></div>", unsafe_allow_html=True)
+    last_updated_placeholder.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Last Updated: <span style='color: #0000ff; padding: 5px; border-radius: 5px;'>...</span></h3></div>", unsafe_allow_html=True)
 
 import os
 API_KEY = os.getenv("FRED_API_KEY")
@@ -54,10 +57,17 @@ def load_data():
     print(f"Dataframe index type: {type(df.index)}")
     print("Non-null counts by column:")
     print(df.count())
-    
+
     return df
 
 df = load_data()
+
+# Update Last Updated placeholder after data load
+if not df.empty and not df.index.empty:
+    latest_date = df.index[-1].strftime('%Y-%m-%d')
+    last_updated_placeholder.markdown(f"<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Last Updated: <span style='color: #0000ff; padding: 5px; border-radius: 5px;'>{latest_date}</span></h3></div>", unsafe_allow_html=True)
+else:
+    last_updated_placeholder.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Last Updated: <span style='color: #0000ff; padding: 5px; border-radius: 5px;'>N/A</span></h3></div>", unsafe_allow_html=True)
 
 # ================== SIDEBAR ==================
 available_indicators = [col for col in df.columns if col not in ["Yield Spread", "Real GDP"]] # Exclude derived/redundant indicators from main selection
@@ -254,6 +264,10 @@ else:
         status_label = "Weak"
         st.error(f"Status: {status_label} 👎")
 
+    # Update Health Score placeholder
+    score_color = get_health_color(total_score)
+    health_score_placeholder.markdown(f"<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Health Score: <span style='color: {score_color}; padding: 5px; border-radius: 5px;'>{total_score:.0f}</span></h3></div>", unsafe_allow_html=True)
+
 st.markdown("---") # Add a separator after the section
 
 st.subheader("Economic Regime")
@@ -328,6 +342,11 @@ else:
         status_func = st.info
 
     status_func(f"Current Economic Regime: **{regime}**")
+    
+    # Update Economic Regime placeholder
+    regime_color = get_color(regime)
+    economic_regime_placeholder.markdown(f"<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Economic Regime: <span style='color: {regime_color}; padding: 5px; border-radius: 5px;'>{regime}</span></h3></div>", unsafe_allow_html=True)
+
 
 st.markdown("---") # Add a separator after the section
 
@@ -425,7 +444,6 @@ if not real_gdp_data.empty:
 else:
     st.warning("Real GDP data not available for forecasting.")
 
-st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
 def get_color(regime):
     if regime == "Expansion":
         return "#00ff00"
@@ -437,6 +455,7 @@ def get_color(regime):
         return "#ff0000"
     else:
         return "#ffffff"
+
 def get_health_color(score):
     if score >= 80:
         return "#00ff00"
@@ -446,3 +465,5 @@ def get_health_color(score):
         return "#0000ff"
     else:
         return "#ff0000"
+
+st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
