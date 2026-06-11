@@ -130,9 +130,28 @@ else:
     st.success(f"🟢 Low Recession Risk: Normal Yield Spread ({latest_spread:.2f}%)")
 
 def calculate_recession_probability(yield_spread):
-    # This is a placeholder model. A more robust model would be trained on historical data.
-    # For now, it provides a probability based on the given formula which correlates with inversion.
-    probability = 1 / (1 + np.exp(yield_spread * 5)) # Adjusted for more intuitive output with typical spreads
+    """
+    Calculate the probability of recession based on the yield spread.
+    
+    This model uses a logistic curve centered around a 0.0 yield spread.
+    The output is clamped between 1% and 99%.
+    
+    Parameters:
+    yield_spread (float): The difference between the 10-year treasury yield and the federal funds rate.
+    
+    Returns:
+    float: The probability of recession.
+    """
+    # Logistic curve parameters
+    midpoint = 0.0  # Center of the curve
+    steepness = 10.0  # Steepness of the curve
+    
+    # Calculate the logistic curve value
+    logistic_value = 1 / (1 + np.exp(-steepness * (yield_spread - midpoint)))
+    
+    # Clamp the output between 1% and 99%
+    probability = np.clip(logistic_value * 100, 1, 99) / 100
+    
     return probability
 
 recession_probability = calculate_recession_probability(latest_spread)
