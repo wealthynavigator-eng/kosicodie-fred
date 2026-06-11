@@ -33,11 +33,15 @@ def get_health_color(score):
 st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide", page_icon="📊")
 with st.container():
     st.markdown("<h1 style='text-align: center; color: #ffffff;'>Kosicodie Macro Dashboard</h1>", unsafe_allow_html=True)
-    status_col, score_col, updated_col = st.columns(3)
+    
+    col_regime, col_score = st.columns([2, 1]) # Wider column for regime, narrower for score
+
     # Initialize placeholders for dynamic updates
-    economic_regime_placeholder = status_col.empty()
-    health_score_placeholder = score_col.empty()
-    last_updated_placeholder = updated_col.empty()
+    with col_regime:
+        economic_regime_placeholder = st.empty()
+    with col_score:
+        health_score_placeholder = st.empty()
+        last_updated_placeholder = st.empty() # Place it inside col_score, below health score
 
     # Initial placeholder content
     economic_regime_placeholder.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Economic Regime: <span style='color: #ff9900; padding: 5px; border-radius: 5px;'>...</span></h3></div>", unsafe_allow_html=True)
