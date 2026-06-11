@@ -13,11 +13,11 @@ with st.container():
     st.markdown("<h1 style='text-align: center; color: #ffffff;'>Kosicodie Macro Dashboard</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("<h3 style='color: #ffffff;'>Economic Regime: <span style='background-color: #ff0000; color: #ffffff; padding: 5px; border-radius: 5px;'>Unknown</span></h3>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Economic Regime: <span style='color: #ff9900; padding: 5px; border-radius: 5px;'>Unknown</span></h3></div>", unsafe_allow_html=True)
     with col2:
-        st.markdown("<h3 style='color: #ffffff;'>Health Score: <span style='background-color: #00ff00; color: #000000; padding: 5px; border-radius: 5px;'>0</span></h3>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Health Score: <span style='color: #00ff00; padding: 5px; border-radius: 5px;'>0</span></h3></div>", unsafe_allow_html=True)
     with col3:
-        st.markdown("<h3 style='color: #ffffff;'>Last Updated: <span style='background-color: #0000ff; color: #ffffff; padding: 5px; border-radius: 5px;'>Unknown</span></h3>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #333333; padding: 10px; border-radius: 5px;'><h3 style='color: #ffffff;'>Last Updated: <span style='color: #0000ff; padding: 5px; border-radius: 5px;'>Unknown</span></h3></div>", unsafe_allow_html=True)
 
 import os
 API_KEY = os.getenv("FRED_API_KEY")
