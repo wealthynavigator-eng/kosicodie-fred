@@ -1,2 +1,7 @@
 .aider*
 .env
+.venv/
+.DS_Store
+.nv/
+__pycache__/
+*.pyc

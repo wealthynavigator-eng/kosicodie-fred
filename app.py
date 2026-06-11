@@ -71,19 +71,43 @@ selected_indicators = st.sidebar.multiselect(
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Latest GDP", f"`${df['GDP'].dropna().iloc[-1]:,.0f}B`")
+    st.markdown(f"""
+    <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
+        <h2 style="color: #ffffff; font-size: 24px;">GDP</h2>
+        <h1 style="color: #ffffff; font-size: 36px;">${df['GDP'].dropna().iloc[-1]:,.0f}B</h1>
+        <p style="color: #666666; font-size: 14px;">Latest Value</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col2:
-    st.metric("Unemployment Rate", f"`{df['Unemployment'].dropna().iloc[-1]:.1f}%`")
+    st.markdown(f"""
+    <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
+        <h2 style="color: #ffffff; font-size: 24px;">Unemployment Rate</h2>
+        <h1 style="color: #ffffff; font-size: 36px;">{df['Unemployment'].dropna().iloc[-1]:.1f}%</h1>
+        <p style="color: #666666; font-size: 14px;">Latest Rate</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col3:
     cpi = df["Inflation (CPI)"].dropna()
     inflation_series = cpi.pct_change(12)
     if inflation_series.empty or inflation_series.dropna().empty:
-        st.metric("Inflation Rate (YoY)", "N/A")
+        st.markdown(f"""
+        <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
+            <h2 style="color: #ffffff; font-size: 24px;">Inflation Rate (YoY)</h2>
+            <h1 style="color: #ffffff; font-size: 36px;">N/A</h1>
+            <p style="color: #666666; font-size: 14px;">Latest Rate</p>
+        </div>
+        """, unsafe_allow_html=True)
     else:
         latest_inflation = inflation_series.dropna().iloc[-1] * 100
-        st.metric("Inflation Rate (YoY)", f"`{latest_inflation:.1f}%`")
+        st.markdown(f"""
+        <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
+            <h2 style="color: #ffffff; font-size: 24px;">Inflation Rate (YoY)</h2>
+            <h1 style="color: #ffffff; font-size: 36px;">{latest_inflation:.1f}%</h1>
+            <p style="color: #666666; font-size: 14px;">Latest Rate</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.subheader("Time Series Plots")
 
@@ -111,30 +135,20 @@ if "10Y Treasury" in df.columns and "Fed Funds Rate" in df.columns:
     # and if it's not explicitly excluded from display logic.
     # For now, it's always displayed as per original request to not change other functionality.
 
-fig = px.line(
-    df,
-    x=df.index,
-    y="Yield Spread",
-    title="Yield Spread & Recession Signals",
-    template="plotly_dark"
-)
+    st.markdown(f"""
+    <div style="background-color: #2f2f2f; padding: 16px; border-radius: 8px; border: 1px solid #444444;">
+        <h2 style="color: #ffffff; font-size: 24px;">Yield Spread</h2>
+        <h1 style="color: #ffffff; font-size: 36px;">{df['Yield Spread'].dropna().iloc[-1]:.2f}%</h1>
+        <p style="color: #666666; font-size: 14px;">Latest Spread</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-fig.update_layout(
-    template="plotly_dark",
-    hovermode="x unified"
-)
-
-st.plotly_chart(fig, use_container_width=False)
-
-latest_spread = df["Yield Spread"].dropna().iloc[-1]
-
-st.subheader("Recession Risk Indicator")
-if latest_spread < 0:
-    st.error(f"🔴 High Recession Risk: Yield Curve Inverted ({latest_spread:.2f}%)")
-elif 0 <= latest_spread < 0.5:
-    st.warning(f"🟠 Moderate Recession Risk: Narrow Yield Spread ({latest_spread:.2f}%)")
-else:
-    st.success(f"🟢 Low Recession Risk: Normal Yield Spread ({latest_spread:.2f}%)")
+    if df["Yield Spread"].dropna().iloc[-1] < 0:
+        st.error(f"🔴 High Recession Risk: Yield Curve Inverted ({df['Yield Spread'].dropna().iloc[-1]:.2f}%)")
+    elif 0 <= df["Yield Spread"].dropna().iloc[-1] < 0.5:
+        st.warning(f"🟠 Moderate Recession Risk: Narrow Yield Spread ({df['Yield Spread'].dropna().iloc[-1]:.2f}%)")
+    else:
+        st.success(f"🟢 Low Recession Risk: Normal Yield Spread ({df['Yield Spread'].dropna().iloc[-1]:.2f}%)")
 
 def calculate_recession_probability(yield_spread):
     """
