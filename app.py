@@ -129,6 +129,8 @@ def style_fig(fig, height=320, spark=False, heatmap=False):
               tickfont=dict(size=10), showgrid=not spark)
     fig.update_xaxes(**ax)
     fig.update_yaxes(**ax)
+    fig.update_xaxes(title_text="")
+    fig.update_yaxes(title_text="")
     if spark:
         fig.update_xaxes(visible=False)
         fig.update_yaxes(visible=False)
@@ -277,18 +279,21 @@ def last_val(col):
         return df[col].dropna().iloc[-1]
     return np.nan
 
+# Deltas are computed on df_raw (native observations, no forward-fill) so the
+# period-over-period change reflects two REAL prints, not ffilled duplicates.
 latest_gdp = last_val('GDP')
-gdp_delta, gdp_dir = delta_of(df['GDP'], pct=True) if 'GDP' in df else (None, "flat")
+gdp_delta, gdp_dir = delta_of(df_raw['GDP'], pct=True) if 'GDP' in df_raw else (None, "flat")
 
 unemployment_rate = last_val('Unemployment')
-unemp_delta, unemp_dir = delta_of(df['Unemployment']) if 'Unemployment' in df else (None, "flat")
+unemp_delta, unemp_dir = delta_of(df_raw['Unemployment']) if 'Unemployment' in df_raw else (None, "flat")
 
 inflation_series = df["Inflation (CPI)"].dropna().pct_change(12) if "Inflation (CPI)" in df else pd.Series(dtype=float)
 latest_inflation_rate = inflation_series.dropna().iloc[-1] * 100 if not inflation_series.dropna().empty else np.nan
-infl_delta, infl_dir = delta_of(inflation_series * 100)
+infl_raw = df_raw["Inflation (CPI)"].pct_change(12) * 100 if "Inflation (CPI)" in df_raw else pd.Series(dtype=float)
+infl_delta, infl_dir = delta_of(infl_raw)
 
 latest_spread = last_val('Yield Spread')
-spread_delta, spread_dir = delta_of(df['Yield Spread']) if 'Yield Spread' in df else (None, "flat")
+spread_delta, spread_dir = delta_of(df_raw['Yield Spread']) if 'Yield Spread' in df_raw else (None, "flat")
 
 # Recession probit — monthly-average spread, fall back to latest displayed spread.
 probit_spread = np.nan
@@ -525,7 +530,8 @@ sechead("Data", "04")
 d1, d2 = st.columns([2, 1])
 with d1:
     sel = df.columns[0] if 'GDP' in df.columns else (selected_indicators[0] if selected_indicators else df.columns[0])
-    recent = df[sel].dropna().tail(10).to_frame('Value').reset_index()
+    # Native observations only (no forward-filled duplicate rows).
+    recent = df_raw[sel].dropna().tail(10).to_frame('Value').reset_index()
     recent['index'] = recent['index'].dt.strftime('%Y-%m-%d')
     recent = recent.rename(columns={'index': 'Date'})
     st.markdown(f'<div class="tunit" style="margin-bottom:8px;">RECENT · {sel.upper()}</div>',
