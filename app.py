@@ -8,9 +8,9 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 
 # ================== CONFIG ==================
-st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide")
-st.title("📈 Kosicodie Macro Dashboard")
-st.subheader("US Macro Economic Trends • Built by a 19yo Econ Freshman")
+st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide", page_icon="📊")
+st.title("Kosicodie Macro Dashboard")
+st.subheader("US Macro Economic Trends")
 
 import os
 API_KEY = os.getenv("FRED_API_KEY")
@@ -64,10 +64,10 @@ selected_indicators = st.sidebar.multiselect(
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Latest GDP", f"${df['GDP'].dropna().iloc[-1]:,.0f}B")
+    st.metric("Latest GDP", f"`${df['GDP'].dropna().iloc[-1]:,.0f}B`")
 
 with col2:
-    st.metric("Unemployment Rate", f"{df['Unemployment'].dropna().iloc[-1]:.1f}%")
+    st.metric("Unemployment Rate", f"`{df['Unemployment'].dropna().iloc[-1]:.1f}%`")
 
 with col3:
     cpi = df["Inflation (CPI)"].dropna()
@@ -76,9 +76,8 @@ with col3:
         st.metric("Inflation Rate (YoY)", "N/A")
     else:
         latest_inflation = inflation_series.dropna().iloc[-1] * 100
-        st.metric("Inflation Rate (YoY)", f"{latest_inflation:.1f}%")
+        st.metric("Inflation Rate (YoY)", f"`{latest_inflation:.1f}%`")
 
-st.subheader("Economic Trends Over Time")
 st.subheader("Time Series Plots")
 
 for column in selected_indicators:
@@ -88,7 +87,8 @@ for column in selected_indicators:
             x=series_data.index,
             y=series_data.values,
             title=column,
-            template="plotly_dark"
+            template="plotly_dark",
+            width=1000
         )
         fig.update_layout(
             template="plotly_dark",
@@ -117,7 +117,7 @@ fig.update_layout(
     hovermode="x unified"
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=False)
 
 latest_spread = df["Yield Spread"].dropna().iloc[-1]
 
@@ -138,7 +138,7 @@ def calculate_recession_probability(yield_spread):
 recession_probability = calculate_recession_probability(latest_spread)
 st.metric("Recession Probability", f"{recession_probability:.2%}")
 
-st.subheader("Economic Health Score")
+st.subheader("Economic Health Score", )
 
 # Insert Recent Data table here
 st.subheader("Recent Data")
@@ -192,7 +192,7 @@ else:
     # Total Economic Health Score
     total_score = unemployment_score + inflation_score + yield_spread_score
     st.markdown(f"---")
-    st.metric("Overall Economic Health Score", f"{total_score:.0f}/100")
+    st.metric("Overall Economic Health Score", f"`{total_score:.0f}/100`")
 
     # Determine status label based on total score
     if total_score >= 80:
@@ -281,7 +281,7 @@ else:
         status_emoji = "⚪"
         status_func = st.info
 
-    status_func(f"{status_emoji} Current Economic Regime: **{regime}**")
+    status_func(f"Current Economic Regime: **{regime}**")
 
 st.markdown("---") # Add a separator after the section
 
