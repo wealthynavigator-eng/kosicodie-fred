@@ -9,8 +9,15 @@ from statsmodels.tsa.arima.model import ARIMA
 
 # ================== CONFIG ==================
 st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide", page_icon="📊")
-st.title("Kosicodie Macro Dashboard")
-st.subheader("US Macro Economic Trends")
+with st.container():
+    st.markdown("<h1 style='text-align: center; color: #ffffff;'>Kosicodie Macro Dashboard</h1>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("<h3 style='color: #ffffff;'>Economic Regime: <span style='background-color: #ff0000; color: #ffffff; padding: 5px; border-radius: 5px;'>Unknown</span></h3>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<h3 style='color: #ffffff;'>Health Score: <span style='background-color: #00ff00; color: #000000; padding: 5px; border-radius: 5px;'>0</span></h3>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<h3 style='color: #ffffff;'>Last Updated: <span style='background-color: #0000ff; color: #ffffff; padding: 5px; border-radius: 5px;'>Unknown</span></h3>", unsafe_allow_html=True)
 
 import os
 API_KEY = os.getenv("FRED_API_KEY")
@@ -399,3 +406,23 @@ else:
     st.warning("Real GDP data not available for forecasting.")
 
 st.caption("Kosicodie Macro Dashboard • Data from FRED (St. Louis Fed) • Built by Kosi")
+def get_color(regime):
+    if regime == "Expansion":
+        return "#00ff00"
+    elif regime == "Slowdown":
+        return "#ffff00"
+    elif regime == "Recovery":
+        return "#0000ff"
+    elif regime == "Stagflation":
+        return "#ff0000"
+    else:
+        return "#ffffff"
+def get_health_color(score):
+    if score >= 80:
+        return "#00ff00"
+    elif score >= 60:
+        return "#ffff00"
+    elif score >= 40:
+        return "#0000ff"
+    else:
+        return "#ff0000"
