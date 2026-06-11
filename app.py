@@ -7,6 +7,28 @@ import plotly.express as px
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 
+def get_color(regime):
+    if regime == "Expansion":
+        return "#00ff00"
+    elif regime == "Slowdown":
+        return "#ffff00"
+    elif regime == "Recovery":
+        return "#0000ff"
+    elif regime == "Stagflation":
+        return "#ff0000"
+    else:
+        return "#ffffff"
+
+def get_health_color(score):
+    if score >= 80:
+        return "#00ff00"
+    elif score >= 60:
+        return "#ffff00"
+    elif score >= 40:
+        return "#0000ff"
+    else:
+        return "#ff0000"
+
 # ================== CONFIG ==================
 st.set_page_config(page_title="Kosicodie Macro Dashboard", layout="wide", page_icon="📊")
 with st.container():
